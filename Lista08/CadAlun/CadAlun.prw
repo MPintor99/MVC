@@ -99,7 +99,7 @@ Return lOk
 
 Static Function ValidPos(oModel)
     Local nOperation := oModel:GetOperation()
-    Local cCodInst := oModel:GetValue('ZS4MASTER','ZS4_CODINS')
+    Local cCodInst := oModel:GetValue('ZS4MASTER','ZS4_CODINS') //Pega o código do instrutor atual da tabela.
     Local cAula    := oModel:GetValue('ZS4MASTER', 'ZS4_AULAS')
     Local nQuantAlun := 0
     Local lOk := .T.
@@ -111,30 +111,43 @@ Static Function ValidPos(oModel)
     If nOperation == 3
         If ZS3->(DbSeek(xFilial('ZS3')+cCodInst)) 
             nQuantAlun := ZS3->ZS3_QTDALU
-            nQuantAlun++
-            If ZS3->(Reclock('ZS3', .F.))
-                ZS3->ZS3_QTDALU := nQuantAlun
-                ZS3->(MSUnlock())
-            Endif
+          
+          If nQuantAlun < 5
+              nQuantAlun++
+              If ZS3->(Reclock('ZS3', .F.))
+                  ZS3->ZS3_QTDALU := nQuantAlun
+                  ZS3->(MSUnlock())
+              Endif
+          Else
+            Help(NIL, NIL, 'Não é possível adicionar alunos neste instrutor', NIL, 'O instrutor já tem 5 anos registrados', 1, 0, NIL, NIL, NIL, NIL, NIL, {'Escolha outro instrutor.'})
+          Endif
         Endif
 
     Elseif nOperation == 4
         ZS3->(DbSeek(xFilial('ZS3')+cCodInstAnterior))
         nQuantAlun := ZS3->ZS3_QTDALU
-        nQuantAlun--
-        If ZS3->(Reclock('ZS3', .F.))
-            ZS3->ZS3_QTDALU := nQuantAlun
-            ZS3->(MSUnlock())
-        Endif
 
+      If nQuantAlun > 0
+          nQuantAlun--
+
+          If ZS3->(Reclock('ZS3', .F.))
+              ZS3->ZS3_QTDALU := nQuantAlun
+              ZS3->(MSUnlock())
+          Endif
+      Endif
         ZS3->(DbSeek(xFilial('ZS3')+cCodInst)) 
 
             nQuantAlun := ZS3->ZS3_QTDALU
+        If nQuantAlun < 5
             nQuantAlun++
             If ZS3->(Reclock('ZS3', .F.))
                 ZS3->ZS3_QTDALU := nQuantAlun
                 ZS3->(MSUnlock())
             Endif
+        Else
+          lOk := .F.
+          Help(NIL, NIL, 'Não é possível adicionar alunos neste instrutor', NIL, 'O instrutor já tem 5 anos registrados', 1, 0, NIL, NIL, NIL, NIL, NIL, {'Escolha outro instrutor.'})
+        Endif
 
     Elseif nOperation == 5
         If cAula != "SIM"
@@ -157,7 +170,7 @@ Static Function ValidPos(oModel)
     Endif
 Return lOk
 
-Static Function InstAual(oView)
+Static Function InstAual(oView) //Pega o código do instrutor anterior na hora da alteração.
     cCodInstAnterior := ZS4->ZS4_CODINS
 Return
 
@@ -213,11 +226,13 @@ User Function DelAlun()
     ZS4->(DbGotop())
     
     while ZS4->(!EOF())
-      if oMark:IsMark()
+      if oMark:IsMark() .And. (ZS4->ZS4_AULAS) != 'SIM'
           RecLock('ZS4', .F.)
             ZS4->(DbDelete()) 
           ZS4->(MSUnlock())
-        endif
+      Else
+        FwAlertError('Não é possível excluir o instrutor pois ele tem alunos em aula.')
+      endif
       ZS4->(DbSkip())
     enddo
   Endif

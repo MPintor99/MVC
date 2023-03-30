@@ -60,5 +60,16 @@ Static Function ViewDef() //Função de visualização de tela
     oView:EnableTitleView('VIEW_ZS1', 'Categoria da CNH')
 Return oView
 
+User Function zOpCatCNH()
+    Local aArea     := GetArea() 
+    Local cOpcao    := ""
+    
+    cOpcao += "1=ACC (Ciclomotor);"
+    cOpcao += "2=A (Moto);"
+    cOpcao += "3=B (Carro);"
+    cOpcao += "4=C (Veículos > 3,5 Ton.);"
+    cOpcao += "5=D (Veículos > 8 passageiros);"
+    cOpcao += "6=E (Veículos > 6 Ton.);"
 
-
+    RestArea(aArea)
+Return cOpcao
