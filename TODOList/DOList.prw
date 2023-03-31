@@ -19,6 +19,9 @@ User Function DOList()
     oBrowse:DisableDetails()
     oBrowse:DisableReport()
 
+    oBrowse:AddLegend('ZS7_TAREFA == "1"', "GREEN", "Tarefa Concluída",  "2")
+    oBrowse:AddLegend('ZS7_TAREFA == "2"', "RED",   "Tarefa não concluída", "2")
+
     oBrowse:Activate()
 Return 
 
@@ -32,7 +35,9 @@ Static Function MenuDef()
 Return aRotina
 
 Static Function ModelDef()
-    Local oModel := MPFormModel():New('MList')
+    Local bGridPos    := {|oGrid| GridPos(oGrid)} 
+    Local oModel   := MPFormModel():New('MList')
+
     Local oStruZS7 := FwFormStruct(1, 'ZS7')
     Local oStruZS8 := FwFormStruct(1, 'ZS8')
 
@@ -42,7 +47,7 @@ Static Function ModelDef()
     oModel:AddFields('ZS7MASTER', /*OWNER*/, oStruZS7)
     oModel:SetDescription('Cadastro de Blocos')
 
-    oModel:AddGrid('ZS8DETAIL', 'ZS7MASTER', oStruZS8)
+    oModel:AddGrid('ZS8DETAIL', 'ZS7MASTER', oStruZS8, NIL, NIL, NIL, bGridPos)
     oModel:GetModel('ZS8DETAIL'):SetDescription('Apartamentos')
 
     oModel:SetRelation('ZS8DETAIL', {{'ZS8_FILIAL', 'xFilial("ZS8")'}, {'ZS8_LISTA', 'ZS7_COD'}}, ZS8-> (IndexKey(1)))
@@ -77,3 +82,45 @@ Static Function ViewDef()
 
 Return oView
 
+Static Function GridPos(oGrid)
+    Local cCodTarefa := FWFldGet('ZS7_COD')
+    Local nLinhas    := oGrid:Length()
+    Local nCont      := 0
+    Local nMarc      := 0
+    Local lOk        := NIL
+    
+    For nCont := 1 to nLinhas
+        oGrid:GoLine(nCont)
+        lOk := oGrid:GetValue('ZS8_MARC')
+        
+        If !oGrid:IsDeleted() .AND. lOk
+            nMarc++
+        Endif
+    Next
+
+    If nMarc == nLinhas
+        If ZS7->(DbSeek(xFilial('ZS7') + cCodTarefa) )
+            If ZS7->(Reclock('ZS7', .F.))
+                ZS7->ZS7_TAREFA := '1'
+                ZS7->(MSUnlock())
+            Endif
+        Endif
+    Else
+                If ZS7->(DbSeek(xFilial('ZS7') + cCodTarefa) )
+            If ZS7->(Reclock('ZS7', .F.))
+                ZS7->ZS7_TAREFA := '2'
+                ZS7->(MSUnlock())
+            Endif
+        Endif
+    Endif
+Return
+
+User Function zOpTarefa()
+    Local aArea     := GetArea() 
+    Local cOpcao    := ""
+    
+    cOpcao += "1=SIM;"
+    cOpcao += "2=NÃO;"
+
+    RestArea(aArea)
+Return cOpcao
