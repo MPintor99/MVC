@@ -9,7 +9,7 @@
     /*/
 User Function CADVEIC()
     Local cAlias := 'ZS2'
-    Local cTitle := 'Cadastro de Cursos'
+    Local cTitle := 'Cadastro de Veículos'
     Local oBrowse := NIL
 
     oBrowse := FWMBrowse():New() //Criação da tela.

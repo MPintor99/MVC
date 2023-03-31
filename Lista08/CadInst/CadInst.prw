@@ -74,7 +74,7 @@ Static Function ValidPos(oModel)
     Local lOk        := .T.
 
     If nOperation == 5
-        If Val(nQuantAlun) > 0
+        If nQuantAlun > 0
         lOk := .F.
             FwAlertError('Não é possível realizar a exclusão de instrutores com alunos', 'Não permitido')
         Endif
